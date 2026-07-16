@@ -86,6 +86,10 @@ always carries all 9. Keep new records consistent with the data (9 languages), n
   `tools/reelgen/reelgen.py` is the CLI; `tools/reelgen/server.py` is a stdlib-only
   local web UI (serves `webui.html`, no framework) wrapping the same functions —
   keep both entry points working when changing rendering/payload logic.
+  `data/progressions.json` holds the calisthenics skill ladders (ordered rungs of
+  exercise ids + rep goals) powering the CLI `journey` subcommand (numbered
+  "Road to X — step N/M" series with localized hooks/closers; output under
+  `reels_out/journeys/`). Any rung id added there must exist in `exercises.json`.
 - **HTML tools:** single-file style — inline `<style>` and `<script>`, no external assets,
   no frameworks. `index.html` uses CSS custom properties as design tokens, a state object +
   render functions, an IntersectionObserver for infinite scroll (page size 60), and a

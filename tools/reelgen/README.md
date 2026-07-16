@@ -12,10 +12,66 @@ For every `(exercise, language)` pair it produces:
 | `material.mp4` | Canvas + looped exercise GIF composited by ffmpeg |
 | `script.txt` | Narration script: hook → numbered `instruction_steps[lang]` → closer |
 | `payload.json` | Ready-to-POST MoneyPrinterTurbo `/api/v1/videos` request |
+| `caption.txt` | Social caption: localized title + CTA + attribution + hashtags |
 | `final.mp4` | The finished reel (only with `--send --wait`) |
+
+## Retention scripts (hook bank + mistakes style)
+
+Two script styles, selected with `--style` (default: `mistakes`):
+
+- **`mistakes`** — retention-optimized: opens with a rotated pain/curiosity hook
+  ("Most people do X wrong…", "If X never hits your {target}…", "The biggest X
+  mistake happens on the first rep…"), reframes steps as "Fix #1, #2…", and ends
+  with a loop-teaser follow CTA.
+- **`tutorial`** — the classic "How to do X + Step 1..N + target/equipment closer".
+
+Hooks (4 per language) and TTS voices (2 per language) rotate **deterministically
+by exercise id**, so a feed of consecutive reels stays varied and re-running a
+batch reproduces the same choices. Voice rate defaults to `1.15` (shorts pacing;
+override with `--voice-rate 1.0`).
+
+```bash
+$PY tools/reelgen/reelgen.py script --id 0025 --lang en --style mistakes
+$PY tools/reelgen/reelgen.py batch --lang en --style tutorial --voice-rate 1.0 --limit 10
+```
+
+## Publishing (captions)
+
+```bash
+# Preview a caption
+$PY tools/reelgen/reelgen.py caption --id 0294 --lang en,es,ko
+```
+
+Every batch job writes a `caption.txt` next to the video: localized title,
+follow CTA, hashtags (per-language generic + exercise-specific), and the
+`© Gym visual` attribution line — keep it when posting.
 
 The attribution string from each record (`© Gym visual — https://gymvisual.com/`)
 is rendered onto every canvas. **It is required by the media license — do not remove it.**
+
+## Skill journeys (calisthenics ladders)
+
+`data/progressions.json` defines 9 skill ladders (push-up, pull-up, dip,
+muscle-up, pistol-squat, handstand, planche, front-lever, l-sit) as ordered
+rungs referencing exercise ids, each with a suggested rep/hold `goal`.
+
+The `journey` subcommand renders a whole ladder as a numbered series —
+"Road to Planche · Step 3/5" — with a journey hook ("step N of M"), tutorial
+steps, and a next-rung teaser closer (final rung = "skill unlocked" closer).
+The step counter is the subscribe hook: viewers follow to see the next rung.
+
+```bash
+# One ladder, one language
+$PY tools/reelgen/reelgen.py journey --skill planche --lang en
+
+# Everything: 9 skills x 9 languages, sent to MPT
+$PY tools/reelgen/reelgen.py journey --skill all --lang en,es,it,tr,ru,zh,hi,pl,ko \
+    --send --wait --mpt-storage $PWD/MoneyPrinterTurbo/storage
+```
+
+Journey jobs land in `reels_out/journeys/<skill>/<lang>/NN-<id>-<slug>/` so
+they never collide with plain batch output. Skill names stay in English
+(international calisthenics terms); hooks/closers/captions are localized.
 
 ## Setup
 
@@ -61,7 +117,8 @@ $PY tools/reelgen/reelgen.py batch --equipment dumbbell --lang en,es --limit 30
 $PY tools/reelgen/reelgen.py batch --body-part chest --lang en --limit 10
 ```
 
-Output goes to `reels_out/<lang>/<id>-<slug>/` (git-ignored).
+Output goes to `reels_out/<lang>/<id>-<slug>/` (git-ignored), journeys to
+`reels_out/journeys/<skill>/<lang>/NN-<id>-<slug>/`.
 
 ## Docker (recommended)
 

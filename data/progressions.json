@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "description": "Calisthenics skill ladders. Each skill lists its progression rungs ordered easiest -> hardest. Every rung references an exercise id from exercises.json and carries a 'goal' (suggested target before advancing to the next rung). Powers the reelgen 'journey' subcommand.",
+  "skills": [
+    {
+      "slug": "push-up",
+      "name": "Push-Up",
+      "focus": "chest / triceps",
+      "rungs": [
+        { "id": "0659", "goal": "3x15" },
+        { "id": "0493", "goal": "3x12" },
+        { "id": "2398", "goal": "3x12" },
+        { "id": "0662", "goal": "3x10" },
+        { "id": "0279", "goal": "3x10" },
+        { "id": "0283", "goal": "3x8" },
+        { "id": "3294", "goal": "3x5 per side" }
+      ]
+    },
+    {
+      "slug": "pull-up",
+      "name": "Pull-Up",
+      "focus": "back / lats",
+      "rungs": [
+        { "id": "0688", "goal": "3x8" },
+        { "id": "0970", "goal": "3x8" },
+        { "id": "0017", "goal": "3x8" },
+        { "id": "0652", "goal": "3x8" },
+        { "id": "1429", "goal": "3x6" },
+        { "id": "3293", "goal": "3x3 per side" },
+        { "id": "0841", "goal": "+20% bodyweight x5" }
+      ]
+    },
+    {
+      "slug": "dip",
+      "name": "Dip",
+      "focus": "chest / triceps",
+      "rungs": [
+        { "id": "1399", "goal": "3x15" },
+        { "id": "0129", "goal": "3x12" },
+        { "id": "0009", "goal": "3x8" },
+        { "id": "0251", "goal": "3x8" },
+        { "id": "0677", "goal": "3x6" },
+        { "id": "1767", "goal": "+20% bodyweight x5" }
+      ]
+    },
+    {
+      "slug": "muscle-up",
+      "name": "Muscle-Up",
+      "focus": "back / chest / explosive pull",
+      "rungs": [
+        { "id": "0652", "goal": "3x10" },
+        { "id": "2462", "goal": "3x8" },
+        { "id": "0558", "goal": "3x3" },
+        { "id": "0631", "goal": "3x3" },
+        { "id": "3286", "goal": "+10% bodyweight x3" }
+      ]
+    },
+    {
+      "slug": "pistol-squat",
+      "name": "Pistol Squat",
+      "focus": "legs / balance",
+      "rungs": [
+        { "id": "2368", "goal": "3x12 per leg" },
+        { "id": "0809", "goal": "3x8 per leg" },
+        { "id": "1759", "goal": "3x5 per leg" },
+        { "id": "0544", "goal": "3x5 per leg" }
+      ]
+    },
+    {
+      "slug": "handstand",
+      "name": "Handstand Push-Up",
+      "focus": "shoulders / balance",
+      "rungs": [
+        { "id": "1296", "goal": "3x10" },
+        { "id": "3302", "goal": "60s hold" },
+        { "id": "0471", "goal": "3x5" }
+      ]
+    },
+    {
+      "slug": "planche",
+      "name": "Planche",
+      "focus": "shoulders / straight-arm strength",
+      "rungs": [
+        { "id": "3301", "goal": "30s hold" },
+        { "id": "3300", "goal": "20s hold" },
+        { "id": "3298", "goal": "15s hold" },
+        { "id": "3299", "goal": "10s hold" },
+        { "id": "3327", "goal": "3x3" }
+      ]
+    },
+    {
+      "slug": "front-lever",
+      "name": "Front Lever",
+      "focus": "back / core / straight-arm strength",
+      "rungs": [
+        { "id": "0652", "goal": "3x10" },
+        { "id": "3296", "goal": "15s hold" },
+        { "id": "3295", "goal": "3x3" }
+      ]
+    },
+    {
+      "slug": "l-sit",
+      "name": "L-Sit",
+      "focus": "core / hip flexors",
+      "rungs": [
+        { "id": "0011", "goal": "3x10" },
+        { "id": "2963", "goal": "3x10" },
+        { "id": "3419", "goal": "20s hold" }
+      ]
+    }
+  ]
+}

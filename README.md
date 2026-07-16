@@ -106,7 +106,8 @@ A step-by-step guide for integrating the dataset into your own application:
 exercises-dataset/
 ├── data/
 │   ├── exercises.json        # Full dataset — 1,324 exercise records (JSON array)
-│   └── exercises.schema.json # JSON Schema (2020-12) describing every record
+│   ├── exercises.schema.json # JSON Schema (2020-12) describing every record
+│   └── progressions.json     # Calisthenics skill ladders (rung ids + rep goals)
 ├── images/                  # 1,324 × 180×180 thumbnails  (© Gym visual)
 ├── videos/                  # 1,324 × 180×180 animation GIFs  (© Gym visual)
 ├── index.html               # Interactive exercise browser (client-side, no server needed)
@@ -122,6 +123,7 @@ exercises-dataset/
 
 - **`data/exercises.json`** — The primary data file. A JSON array of 1,324 exercise objects with all metadata. `image` / `gif_url` point to the local 180×180 assets, and each record carries an `attribution` field; `media_id` holds the original media reference id.
 - **`data/exercises.schema.json`** — A [JSON Schema](https://json-schema.org/) (Draft 2020-12) that formally describes every field, its type and constraints. Use it to validate the dataset or your own additions with any standard JSON Schema validator.
+- **`data/progressions.json`** — Calisthenics skill ladders (push-up, pull-up, dip, muscle-up, pistol-squat, handstand, planche, front-lever, l-sit). Each skill lists ordered progression rungs referencing exercise ids, with a suggested rep/hold goal per rung.
 - **`images/`, `videos/`** — 180×180 thumbnails and animation GIFs (© [Gym visual](https://gymvisual.com/), used with permission).
 - **`index.html`** — Standalone exercise browser. Open directly in any modern browser.
 - **`setup.html`** — Developer guide for DB setup, API integration, and LLM-assisted backend generation.

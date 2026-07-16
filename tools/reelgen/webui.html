@@ -88,8 +88,9 @@
       <div class="row">
         <select id="scriptLang"></select>
         <button class="btn" id="btnScript">Load script</button>
+        <button class="btn" id="btnCaption">Load caption</button>
       </div>
-      <textarea id="scriptBox" placeholder="Narration script appears here…"></textarea>
+      <textarea id="scriptBox" placeholder="Narration script / social caption appears here…"></textarea>
     </div>
   </section>
 
@@ -101,7 +102,12 @@
     <div class="row">
       <label>Duration (s)<input type="number" id="duration" value="20" min="5" max="60"></label>
       <label>Max steps<input type="number" id="maxSteps" value="5" min="1" max="10"></label>
+      <label>Style<select id="style">
+        <option value="mistakes" selected>mistakes (retention)</option>
+        <option value="tutorial">tutorial (classic)</option>
+      </select></label>
     </div>
+
     <label class="checkline"><input type="checkbox" id="sendMpt"> Send to MoneyPrinterTurbo</label>
     <div id="mptCfg" class="hidden">
       <input type="text" id="mptUrl" value="http://127.0.0.1:8080" placeholder="MPT API URL">
@@ -187,8 +193,13 @@ $('#btnMaterial').onclick = () => {
 };
 
 $('#btnScript').onclick = async () => {
-  const d = await api(`/api/script?id=${state.activeId}&lang=${$('#scriptLang').value}&max_steps=${$('#maxSteps').value}`);
+  const d = await api(`/api/script?id=${state.activeId}&lang=${$('#scriptLang').value}&max_steps=${$('#maxSteps').value}&style=${$('#style').value}`);
   $('#scriptBox').value = d.script;
+};
+
+$('#btnCaption').onclick = async () => {
+  const d = await api(`/api/caption?id=${state.activeId}&lang=${$('#scriptLang').value}`);
+  $('#scriptBox').value = d.caption;
 };
 
 // ---- batch ----
@@ -210,6 +221,7 @@ $('#btnGo').onclick = async () => {
     ids, langs,
     duration: +$('#duration').value,
     max_steps: +$('#maxSteps').value,
+    style: $('#style').value,
     send: $('#sendMpt').checked,
     wait: $('#waitMpt').checked,
     mpt_url: $('#mptUrl').value,

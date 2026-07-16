@@ -87,9 +87,12 @@ def run_batch_job(job_id, params):
                 os.makedirs(job_dir, exist_ok=True)
                 log(job_id, "[{}/{}] {} {}".format(n, total, ex_id, lang))
 
-                script = reelgen.build_script(e, lang, max_steps)
+                style = params.get("style") or "mistakes"
+                script = reelgen.build_script(e, lang, max_steps, style)
                 with open(os.path.join(job_dir, "script.txt"), "w", encoding="utf-8") as f:
                     f.write(script + "\n")
+                with open(os.path.join(job_dir, "caption.txt"), "w", encoding="utf-8") as f:
+                    f.write(reelgen.build_caption(e, lang) + "\n")
 
                 material_mp4 = os.path.join(job_dir, "material.mp4")
                 reelgen.render_material(e, material_mp4, ffmpeg, duration, gif_scale, job_dir)
@@ -103,7 +106,9 @@ def run_batch_job(job_id, params):
                     shutil.copyfile(material_mp4, dst)
 
                 payload = reelgen.build_payload(
-                    e, lang, script, material_url, duration, params.get("voice") or None)
+                    e, lang, script, material_url, duration,
+                    params.get("voice") or None,
+                    float(params.get("voice_rate") or reelgen.DEFAULT_VOICE_RATE))
                 with open(os.path.join(job_dir, "payload.json"), "w", encoding="utf-8") as f:
                     json.dump(payload, f, ensure_ascii=False, indent=2)
 
@@ -211,7 +216,16 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(400, "bad id or lang")
                 return
             max_steps = int(q.get("max_steps", ["5"])[0])
-            self._json({"lang": lang, "script": reelgen.build_script(e, lang, max_steps)})
+            style = q.get("style", ["mistakes"])[0]
+            self._json({"lang": lang,
+                        "script": reelgen.build_script(e, lang, max_steps, style)})
+        elif path == "/api/caption":
+            e = BY_ID.get(q.get("id", [""])[0])
+            lang = q.get("lang", ["en"])[0]
+            if not e or lang not in reelgen.LANGS:
+                self._send(400, "bad id or lang")
+                return
+            self._json({"lang": lang, "caption": reelgen.build_caption(e, lang)})
         elif path == "/api/material":
             e = BY_ID.get(q.get("id", [""])[0])
             if not e:
