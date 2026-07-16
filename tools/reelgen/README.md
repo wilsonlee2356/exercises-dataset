@@ -177,7 +177,10 @@ $PY tools/reelgen/reelgen.py batch --lang en --limit 30 \
 ```
 
 `--send` POSTs each `payload.json`; `--wait` polls the task and downloads the
-finished reel as `final.mp4`. Without `--send`, you can POST the payloads yourself:
+finished reel as `final.mp4`. All payloads are submitted first and polled
+afterwards — MPT runs `max_concurrent_tasks` (default 5) in parallel, so wall
+time is ~ceil(N/5) × per-task time (measured: 6 reels in 4m17s vs ~13m serial).
+Without `--send`, you can POST the payloads yourself:
 
 ```bash
 curl -X POST http://127.0.0.1:8080/api/v1/videos \

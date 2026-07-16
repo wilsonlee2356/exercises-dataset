@@ -759,16 +759,33 @@ def run_one(args, exercise, lang, ffmpeg, script=None, caption=None, job_dir=Non
     return job_dir, payload
 
 
-def submit_to_mpt(args, job_dir, payload):
-    task_id = mpt_post_video(args.mpt_url, payload)
-    print("    MPT task: " + task_id)
+def send_all(args, submitted):
+    """Submit every payload first, then poll — MPT runs up to
+    max_concurrent_tasks (default 5) at once, so total wall time is
+    ~ceil(N/5) x per-task time instead of N x per-task time."""
+    pending = []
+    for job_dir, payload in submitted:
+        try:
+            task_id = mpt_post_video(args.mpt_url, payload)
+        except Exception as exc:
+            print("    MPT submit FAILED ({}): {}".format(
+                os.path.basename(job_dir), exc))
+            continue
+        print("    MPT task: {} ({})".format(task_id, os.path.basename(job_dir)))
+        pending.append((job_dir, task_id))
     if args.wait:
-        data = mpt_poll_task(args.mpt_url, task_id)
-        videos = data.get("videos") or []
-        if videos:
-            final = os.path.join(job_dir, "final.mp4")
-            download(mpt_absolute_url(args.mpt_url, videos[0]), final)
-            print("    final reel: " + final)
+        print("waiting on {} MPT task(s)...".format(len(pending)))
+        for job_dir, task_id in pending:
+            try:
+                data = mpt_poll_task(args.mpt_url, task_id)
+            except Exception as exc:
+                print("    MPT task {} FAILED: {}".format(task_id, exc))
+                continue
+            videos = data.get("videos") or []
+            if videos:
+                final = os.path.join(job_dir, "final.mp4")
+                download(mpt_absolute_url(args.mpt_url, videos[0]), final)
+                print("    final reel: " + final)
 
 
 def cmd_batch(args):
@@ -785,6 +802,7 @@ def cmd_batch(args):
     print("batch: {} exercise(s) x {} language(s) = {} job(s)".format(
         len(exercises), len(langs), total))
     n = 0
+    submitted = []
     for e in exercises:
         for lang in langs:
             n += 1
@@ -795,7 +813,9 @@ def cmd_batch(args):
                 continue
             print("[{}/{}] {} {} -> {}".format(n, total, e["id"], lang, job_dir))
             if args.send:
-                submit_to_mpt(args, job_dir, payload)
+                submitted.append((job_dir, payload))
+    if args.send:
+        send_all(args, submitted)
 
 
 def cmd_journey(args):
@@ -816,6 +836,7 @@ def cmd_journey(args):
     print("journey: {} skill(s) x {} language(s) = {} job(s)".format(
         len(skills), len(langs), total))
     n = 0
+    submitted = []
     for skill in skills:
         rungs = skill["rungs"]
         exercises = []
@@ -849,7 +870,9 @@ def cmd_journey(args):
                     n, total, skill["slug"], i, len(rungs), e["name"],
                     rung.get("goal", "-"), lang, job_dir))
                 if args.send:
-                    submit_to_mpt(args, job_dir, payload)
+                    submitted.append((job_dir, payload))
+    if args.send:
+        send_all(args, submitted)
 
 
 def build_parser():

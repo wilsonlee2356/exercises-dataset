@@ -75,6 +75,7 @@ def run_batch_job(job_id, params):
         log(job_id, "batch: {} exercise(s) x {} language(s) = {} job(s)".format(
             len(ids), len(langs), total))
         n = 0
+        submitted = []
         for ex_id in ids:
             e = BY_ID.get(ex_id)
             if not e:
@@ -113,18 +114,35 @@ def run_batch_job(job_id, params):
                     json.dump(payload, f, ensure_ascii=False, indent=2)
 
                 if send:
-                    task_id = reelgen.mpt_post_video(mpt_url, payload)
-                    log(job_id, "    MPT task: " + task_id)
-                    if wait:
-                        data = reelgen.mpt_poll_task(mpt_url, task_id)
-                        videos = data.get("videos") or []
-                        if videos:
-                            final = os.path.join(job_dir, "final.mp4")
-                            reelgen.download(reelgen.mpt_absolute_url(mpt_url, videos[0]), final)
-                            rel = os.path.relpath(final, OUT_ROOT)
-                            with JOBS_LOCK:
-                                JOBS[job_id]["outputs"].append(rel)
-                            log(job_id, "    final reel: " + rel)
+                    submitted.append((job_dir, payload, ex_id, lang))
+
+        # Submit everything first, then poll: MPT runs up to
+        # max_concurrent_tasks (5) at once -> ~5x faster than submit->wait loops.
+        pending = []
+        for job_dir, payload, ex_id, lang in submitted:
+            try:
+                task_id = reelgen.mpt_post_video(mpt_url, payload)
+            except Exception as exc:
+                log(job_id, "    MPT submit FAILED ({} {}): {}".format(ex_id, lang, exc))
+                continue
+            log(job_id, "    MPT task: {} ({} {})".format(task_id, ex_id, lang))
+            pending.append((job_dir, task_id))
+        if wait:
+            log(job_id, "waiting on {} MPT task(s)...".format(len(pending)))
+            for job_dir, task_id in pending:
+                try:
+                    data = reelgen.mpt_poll_task(mpt_url, task_id)
+                except Exception as exc:
+                    log(job_id, "    MPT task {} FAILED: {}".format(task_id, exc))
+                    continue
+                videos = data.get("videos") or []
+                if videos:
+                    final = os.path.join(job_dir, "final.mp4")
+                    reelgen.download(reelgen.mpt_absolute_url(mpt_url, videos[0]), final)
+                    rel = os.path.relpath(final, OUT_ROOT)
+                    with JOBS_LOCK:
+                        JOBS[job_id]["outputs"].append(rel)
+                    log(job_id, "    final reel: " + rel)
         log(job_id, "done.")
     except Exception as exc:
         with JOBS_LOCK:
