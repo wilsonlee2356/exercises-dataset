@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>reelgen — form check reel factory</title>
+<style>
+  :root {
+    --bg: #101014; --panel: #1c1c22; --panel2: #24242c; --line: #32323c;
+    --text: #f2f2f4; --dim: #8e8e96; --accent: #ff7a45; --accent2: #4c8dff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.5 -apple-system, "Helvetica Neue", Arial, sans-serif; }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 12px; }
+  header h1 { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  header span { color: var(--dim); font-size: 13px; }
+  main { display: grid; grid-template-columns: 340px 1fr 380px; gap: 16px; padding: 16px 24px; height: calc(100vh - 59px); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; overflow: auto; }
+  h2 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+  input, select, textarea, button { font: inherit; }
+  input[type=text], input[type=number], select {
+    width: 100%; background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 10px; margin-bottom: 8px;
+  }
+  input:focus, select:focus { outline: 1px solid var(--accent); }
+  .row { display: flex; gap: 8px; } .row > * { flex: 1; }
+  .btn { background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+         padding: 7px 12px; cursor: pointer; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #141414; font-weight: 700; width: 100%; padding: 11px; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  #exlist { margin-top: 8px; }
+  .ex { display: flex; gap: 8px; align-items: center; padding: 7px 8px; border-radius: 8px; cursor: pointer; }
+  .ex:hover { background: var(--panel2); }
+  .ex.active { background: var(--panel2); outline: 1px solid var(--accent2); }
+  .ex .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ex .tag { font-size: 11px; color: var(--dim); }
+  .muted { color: var(--dim); font-size: 12px; margin: 6px 0; }
+  #cardImg { width: 100%; max-width: 320px; border-radius: 12px; display: block; margin: 0 auto 12px; }
+  video { width: 100%; max-width: 320px; border-radius: 12px; display: block; margin: 0 auto 12px; background: #000; }
+  #scriptBox { width: 100%; min-height: 160px; background: var(--panel2); color: var(--text);
+               border: 1px solid var(--line); border-radius: 8px; padding: 10px; resize: vertical; }
+  .langs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+  .langs label, .checkline { display: flex; gap: 6px; align-items: center; background: var(--panel2);
+               border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; cursor: pointer; }
+  .checkline { margin-bottom: 8px; }
+  #log { background: #0a0a0d; border: 1px solid var(--line); border-radius: 8px; padding: 10px;
+         font: 12px/1.5 ui-monospace, Menlo, monospace; height: 220px; overflow: auto; white-space: pre-wrap; }
+  .hidden { display: none; }
+  .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px;
+          border: 1px solid var(--line); color: var(--dim); }
+  .pill.ok { color: #7ce05c; border-color: #7ce05c; }
+  .pill.bad { color: #ff5a5a; border-color: #ff5a5a; }
+</style>
+</head>
+<body>
+<header>
+  <h1>reelgen</h1>
+  <span>form-check reel factory · exercises × 9 languages · MoneyPrinterTurbo</span>
+</header>
+<main>
+  <!-- Exercise picker -->
+  <section>
+    <h2>1 · Pick exercises</h2>
+    <input type="text" id="q" placeholder="Search name or id…">
+    <div class="row">
+      <select id="fBody"><option value="">All body parts</option></select>
+      <select id="fEquip"><option value="">All equipment</option></select>
+    </div>
+    <div class="row">
+      <button class="btn" id="selFirst">Select first 30</button>
+      <button class="btn" id="selClear">Clear</button>
+    </div>
+    <div class="muted" id="listMeta"></div>
+    <div id="exlist"></div>
+  </section>
+
+  <!-- Preview -->
+  <section>
+    <h2>2 · Preview</h2>
+    <div id="previewEmpty" class="muted">Select an exercise on the left.</div>
+    <div id="preview" class="hidden">
+      <img id="cardImg" alt="card preview">
+      <div class="row" style="max-width:320px;margin:0 auto 12px">
+        <button class="btn" id="btnMaterial">▶ Render material preview</button>
+      </div>
+      <video id="materialVid" class="hidden" controls loop muted></video>
+      <div class="row">
+        <select id="scriptLang"></select>
+        <button class="btn" id="btnScript">Load script</button>
+      </div>
+      <textarea id="scriptBox" placeholder="Narration script appears here…"></textarea>
+    </div>
+  </section>
+
+  <!-- Batch -->
+  <section>
+    <h2>3 · Generate</h2>
+    <div class="muted">Languages</div>
+    <div class="langs" id="langBoxes"></div>
+    <div class="row">
+      <label>Duration (s)<input type="number" id="duration" value="20" min="5" max="60"></label>
+      <label>Max steps<input type="number" id="maxSteps" value="5" min="1" max="10"></label>
+    </div>
+    <label class="checkline"><input type="checkbox" id="sendMpt"> Send to MoneyPrinterTurbo</label>
+    <div id="mptCfg" class="hidden">
+      <input type="text" id="mptUrl" value="http://127.0.0.1:8080" placeholder="MPT API URL">
+      <input type="text" id="mptStorage" placeholder="MPT storage/ dir, e.g. /opt/MoneyPrinterTurbo/storage">
+      <label class="checkline"><input type="checkbox" id="waitMpt" checked> Wait &amp; download final reels</label>
+      <button class="btn" id="btnPing">Ping MPT</button> <span class="pill" id="pingRes">not tested</span>
+    </div>
+    <br>
+    <button class="btn primary" id="btnGo">Generate reels</button>
+    <br><br>
+    <h2>Progress</h2>
+    <div id="log">—</div>
+    <div id="outputs"></div>
+  </section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const state = { selected: new Set(), activeId: null, lastOutputs: null };
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  return r.json();
+}
+
+// ---- options + list ----
+async function init() {
+  const o = await api('/api/options');
+  o.body_parts.forEach(v => $('#fBody').insertAdjacentHTML('beforeend', `<option>${v}</option>`));
+  o.equipment.forEach(v => $('#fEquip').insertAdjacentHTML('beforeend', `<option>${v}</option>`));
+  if (o.mpt_url) $('#mptUrl').value = o.mpt_url;
+  if (o.mpt_storage) $('#mptStorage').value = o.mpt_storage;
+  o.langs.forEach(l => {
+    $('#langBoxes').insertAdjacentHTML('beforeend',
+      `<label><input type="checkbox" value="${l}" ${['en','es'].includes(l)?'checked':''}> ${l}</label>`);
+    $('#scriptLang').insertAdjacentHTML('beforeend', `<option>${l}</option>`);
+  });
+  await refreshList();
+}
+
+async function refreshList() {
+  const p = new URLSearchParams({ q: $('#q').value, body_part: $('#fBody').value, equipment: $('#fEquip').value });
+  const d = await api('/api/exercises?' + p);
+  $('#listMeta').textContent = `${d.total} match${d.total===1?'':'es'} · showing ${d.items.length} · ${state.selected.size} selected`;
+  $('#exlist').innerHTML = d.items.map(e => `
+    <div class="ex ${e.id===state.activeId?'active':''}" data-id="${e.id}">
+      <input type="checkbox" data-id="${e.id}" ${state.selected.has(e.id)?'checked':''}>
+      <span class="nm">${e.name}</span><span class="tag">${e.body_part}</span>
+    </div>`).join('');
+}
+
+let debounce;
+['#q'].forEach(s => $(s).addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(refreshList, 250); }));
+$('#fBody').addEventListener('change', refreshList);
+$('#fEquip').addEventListener('change', refreshList);
+
+$('#exlist').addEventListener('click', (ev) => {
+  const cb = ev.target.closest('input[type=checkbox]');
+  if (cb) { cb.checked ? state.selected.add(cb.dataset.id) : state.selected.delete(cb.dataset.id);
+            $('#listMeta').textContent = $('#listMeta').textContent.replace(/\d+ selected/, state.selected.size + ' selected'); return; }
+  const row = ev.target.closest('.ex');
+  if (row) showPreview(row.dataset.id);
+});
+
+$('#selFirst').onclick = () => { document.querySelectorAll('#exlist .ex').forEach((r,i)=>{ if(i<30) state.selected.add(r.dataset.id); }); refreshList(); };
+$('#selClear').onclick = () => { state.selected.clear(); refreshList(); };
+
+// ---- preview ----
+async function showPreview(id) {
+  state.activeId = id;
+  $('#previewEmpty').classList.add('hidden');
+  $('#preview').classList.remove('hidden');
+  $('#materialVid').classList.add('hidden');
+  $('#cardImg').src = '/api/card/' + id + '.png';
+  refreshList();
+}
+
+$('#btnMaterial').onclick = () => {
+  const v = $('#materialVid');
+  v.src = '/api/material?id=' + state.activeId + '&duration=6';
+  v.classList.remove('hidden');
+  v.play();
+};
+
+$('#btnScript').onclick = async () => {
+  const d = await api(`/api/script?id=${state.activeId}&lang=${$('#scriptLang').value}&max_steps=${$('#maxSteps').value}`);
+  $('#scriptBox').value = d.script;
+};
+
+// ---- batch ----
+$('#sendMpt').addEventListener('change', e => $('#mptCfg').classList.toggle('hidden', !e.target.checked));
+
+$('#btnPing').onclick = async () => {
+  const d = await api('/api/mpt/ping?url=' + encodeURIComponent($('#mptUrl').value));
+  const p = $('#pingRes');
+  p.textContent = d.ok ? 'reachable' : ('unreachable' + (d.error ? ': ' + d.error : ''));
+  p.className = 'pill ' + (d.ok ? 'ok' : 'bad');
+};
+
+let pollTimer = null;
+$('#btnGo').onclick = async () => {
+  const ids = [...state.selected];
+  const langs = [...document.querySelectorAll('#langBoxes input:checked')].map(c => c.value);
+  if (!ids.length || !langs.length) { alert('Select at least one exercise and one language.'); return; }
+  const body = {
+    ids, langs,
+    duration: +$('#duration').value,
+    max_steps: +$('#maxSteps').value,
+    send: $('#sendMpt').checked,
+    wait: $('#waitMpt').checked,
+    mpt_url: $('#mptUrl').value,
+    mpt_storage: $('#mptStorage').value,
+  };
+  $('#btnGo').disabled = true;
+  $('#log').textContent = 'starting…';
+  $('#outputs').innerHTML = '';
+  state.lastOutputs = null;
+  const { job_id, error } = await api('/api/batch', { method: 'POST', body: JSON.stringify(body) });
+  if (error) { $('#log').textContent = error; $('#btnGo').disabled = false; return; }
+  pollTimer = setInterval(() => pollJob(job_id), 1500);
+};
+
+async function pollJob(job_id) {
+  const j = await api('/api/jobs/' + job_id);
+  // log: only auto-scroll when the user is already at the bottom
+  const logEl = $('#log');
+  const atBottom = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 20;
+  logEl.textContent = (j.log || []).join('\n');
+  if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+  // outputs: only re-render when the list actually changes (rebuilding <video>
+  // nodes every poll made the panel flicker); preload="none" keeps it light
+  const key = JSON.stringify(j.outputs || []);
+  if (key !== state.lastOutputs) {
+    state.lastOutputs = key;
+    const outs = j.outputs || [];
+    $('#outputs').innerHTML = outs.length
+      ? '<h2>Final reels</h2>' + outs.map(o =>
+          `<video src="/out/${o}" controls loop muted preload="none"></video>`).join('')
+      : '';
+  }
+  if (j.done) { clearInterval(pollTimer); $('#btnGo').disabled = false; if (j.error) $('#log').textContent += '\nERROR: ' + j.error; }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -111,6 +111,9 @@ exercises-dataset/
 ├── videos/                  # 1,324 × 180×180 animation GIFs  (© Gym visual)
 ├── index.html               # Interactive exercise browser (client-side, no server needed)
 ├── setup.html               # Developer setup guide (DB import + API integration)
+├── tools/
+│   └── reelgen/             # Short-form video ("form check" reel) generator — see tools/reelgen/README.md
+├── docker-compose.yml       # One-command reel factory (reelgen UI + MoneyPrinterTurbo API)
 ├── NOTICE.md                # Media attribution & license terms
 └── README.md
 ```

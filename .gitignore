@@ -3,6 +3,8 @@ __pycache__/
 .DS_Store
 .venv/
 *.zip
+reels_out/
 
 # Claude Code local settings (do not publish)
 .claude/
+MoneyPrinterTurbo/

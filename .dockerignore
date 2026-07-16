@@ -1,0 +1,8 @@
+.git
+.venv
+MoneyPrinterTurbo
+reels_out
+__pycache__
+*.pyc
+.DS_Store
+docker-compose.yml

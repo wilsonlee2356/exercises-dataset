@@ -1,0 +1,44 @@
+# Exercises Dataset + MoneyPrinterTurbo — one-command reel factory.
+#
+#   docker compose up --build        # build both images, start both services
+#   open http://127.0.0.1:8321       # reelgen UI (pick exercises → generate)
+#
+# reelgen hands materials to MPT through the shared ./MoneyPrinterTurbo/storage
+# folder and calls its API over the internal docker network (http://mpt-api:8080).
+
+services:
+  mpt-api:
+    build:
+      context: ./MoneyPrinterTurbo
+      args:
+        # upstream Dockerfile defaults to China mirrors; use official ones here
+        DOCKER_BUILD_MIRROR: default
+        PIP_USE_OFFICIAL: "1"
+    container_name: reelgen-mpt-api
+    command: ["python3", "main.py"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./MoneyPrinterTurbo/config.toml:/MoneyPrinterTurbo/config.toml
+      - ./MoneyPrinterTurbo/storage:/MoneyPrinterTurbo/storage
+    restart: unless-stopped
+
+  reelgen:
+    build:
+      context: .
+      dockerfile: tools/reelgen/Dockerfile
+    container_name: reelgen-ui
+    ports:
+      - "127.0.0.1:8321:8321"
+    environment:
+      # pre-fills the UI and serves as batch-job defaults
+      REELGEN_MPT_URL: http://mpt-api:8080
+      REELGEN_MPT_STORAGE: /mpt-storage
+    volumes:
+      # the materials handoff: reelgen writes, MPT reads (MPT requires local
+      # materials under <MPT>/storage/local_videos)
+      - ./MoneyPrinterTurbo/storage:/mpt-storage
+      - ./reels_out:/app/reels_out
+    depends_on:
+      - mpt-api
+    restart: unless-stopped
